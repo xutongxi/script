@@ -8,7 +8,7 @@ import eval_utils as utils
 import multiprocessing
 
 
-def handle_op(project, op_str, cur_addr, references, symbols):
+def handle_op(factory, op_str, cur_addr, references, symbols):
     # 1. 若为rip寻址将地址偏移量换成int
     # 2将有对应string的替换成string
     # addr is memory address
@@ -25,7 +25,7 @@ def handle_op(project, op_str, cur_addr, references, symbols):
             offset = int(match.group(2), 16)
             # print(f'offset:{offset}')
             try:
-                cur_state = project.factory.blank_state(addr=cur_addr)
+                cur_state = factory.blank_state(addr=cur_addr)
                 cur_rip = int(cur_state.regs.rip._model_concrete.value) #当前状态下的rip寄存器的值
             except Exception as e:
                 print(f"ERROR: {e}")
@@ -56,7 +56,7 @@ def handle_op(project, op_str, cur_addr, references, symbols):
     return op_str
 
 
-def get_bb_seq(project, blocks, references, symbols):
+def get_bb_seq(factory, blocks, references, symbols):
     seq = []
     '''
     format should be like:结果
@@ -74,7 +74,7 @@ def get_bb_seq(project, blocks, references, symbols):
         for ins in b.insns:
             temp_ins = []
             temp_ins.append(ins.mnemonic)
-            temp_ins.append(handle_op(project, ins.op_str, ins.address, references, symbols))  # 替换string address symbol
+            temp_ins.append(handle_op(factory, ins.op_str, ins.address, references, symbols))  # 替换string address symbol
             bseq.append(' '.join(temp_ins))
         seq.append((block.addr, bseq))
     return seq  # [(addr1,block_of_inst1).....]
@@ -118,12 +118,13 @@ def get_structural_embedding(func, ndict):  ## 分析作用画：出邻接图
 
 def process_file(project, addr, cfg, ndict):  # ndict
     symbols = project.loader
+    factory = project.factory
     seq, adjacency = [], []
     try:
         func = cfg.kb.functions[addr]
         blocks = func.blocks
         references = func.string_references()
-        seq = get_bb_seq(project, blocks, references, symbols) ## 规范化每个instruction，List内包string形式，不知道为啥没用上
+        seq = get_bb_seq(factory, blocks, references, symbols) ## 规范化每个instruction，List内包string形式，不知道为啥没用上
         # if(adj):
         # print("process file func")
         # print(func)
@@ -141,7 +142,6 @@ def process_data(entries_with_folders):
     # print(testData)
     palmtree = utils.UsableTransformer(model_path="./palmtree/pretrained_palmtree", vocab_path="./palmtree/vocab")
     bin_name, folders = entries_with_folders
-    bpath = os.path.join(folders['bin'], bin_name)
     lab_new, emb_new, adj_new = {}, {}, {}
     bpath = os.path.join(folders['bin'], bin_name)  # data 在外围为bins 是二进制文件路径集合
     # print(bpath)
