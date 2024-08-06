@@ -128,7 +128,7 @@ def process_file(project, addr, cfg, ndict):  # ndict
         # if(adj):
         # print("process file func")
         # print(func)
-        adjacency = get_structural_embedding(func, ndict)
+        adjacency = get_structural_embedding(func, ndict)  # 这里的adjanced是否包括了block和其他function的连接？
 
     except Exception as e:
         print(f'ERROR: {e}')
