@@ -79,7 +79,7 @@ def get_bb_seq(factory, blocks, references, symbols):
         seq.append((block.addr, bseq))
     return seq  # [(addr1,block_of_inst1).....]
 
-def get_node_dict(graph):  # 创建node address 对应字典，应该是在func层调用的
+def get_node_dict(graph):  # 创建node address 对应字典，包含所有函数所有block的address
     res = {}
     for node in graph.nodes():
         res[node.addr] = node
